@@ -1,5 +1,5 @@
 # cpjohn-amc
-Private python module record
+Personal use python module record
 
 ## cpjohn_amc:
 - Stands for "cpjohn AM file Configuration."
