@@ -1,6 +1,12 @@
 ##### cpjohn expansion microscope
 
-# Ver 1.0
+### Last Update
+# Ver. 1.1
+# Date: 2020/10/22
+# Content: Modify layout, add dtype function.
+
+### Before
+# Ver. 1.0
 # R. Date : 2020/10/09
 
 import numpy as np
@@ -46,16 +52,13 @@ def AutoPC(mx_c, mx_t, posi_c, posi_t): # Proto in 10 T-07
     PC = np.corrcoef(mx_c_overlap_1d, mx_t_overlap_1d)[0][1]
     return PC
 
-def resampleRGI3d(input_mx, resize_to): # Proto in 10 T-08
+def resampleRGI3d(input_mx, resize_to, dtype='float64'):
     # Ref: 10 3-A-7
+    # Ver. 2.1
     # input_mx : numpy array, the original target matrix
     # resize_to: list or tuple with 3 int inside
-    a = np.shape(input_mx)[0]
-    b = np.shape(input_mx)[1]
-    c = np.shape(input_mx)[2]
-    p = resize_to[0]
-    q = resize_to[1]
-    r = resize_to[2]
+    a, b, c = np.shape(input_mx)
+    p, q, r = resize_to
     z_grid = np.linspace(0, p - 1, a)
     y_grid = np.linspace(0, q - 1, b)
     x_grid = np.linspace(0, r - 1, c)
@@ -65,5 +68,5 @@ def resampleRGI3d(input_mx, resize_to): # Proto in 10 T-08
     x_grid_t2 = np.arange(r)
     meshgrid_para = np.meshgrid(z_grid_t2, y_grid_t2, x_grid_t2)
     RGI_mesh_mx = RGI((meshgrid_para[0], meshgrid_para[1], meshgrid_para[2]))
-    RGI_mx = np.transpose(RGI_mesh_mx, axes=[1, 0, 2])
+    RGI_mx = np.transpose(RGI_mesh_mx, axes=[1, 0, 2]).astype(dtype)
     return RGI_mx
