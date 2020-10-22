@@ -3,7 +3,9 @@
 ### Last Update
 # Ver. 1.1
 # Date: 2020/10/22
-# Content: Modify layout, add dtype function.
+# Content: resampleRGI3d: Modify layout, add dtype function.
+#          AutoPC: Modify layout, add c_z_from, t_x_to and other 10 variable,
+#                  Fix returning error problem
 
 ### Before
 # Ver. 1.0
@@ -25,7 +27,13 @@ def ReLU(x):
     if x > 0: y = x
     return y
 
-def AutoPC(mx_c, mx_t, posi_c, posi_t): # Proto in 10 T-07
+##### Generate Function (2.1) (present)
+
+def AutoPC(mx_c, mx_t, posi_c, posi_t):
+    # Ref: 10 T-04 (1.0)
+    # Ver.: 2.1
+    # input: two 3D numpy array and their corresponding position
+    # inner func.: ReLU
     # Function ReLU
     def ReLU(x):
         y = 0
@@ -39,12 +47,20 @@ def AutoPC(mx_c, mx_t, posi_c, posi_t): # Proto in 10 T-07
     mxc_z, mxc_y, mxc_x = np.shape(mx_c)
     mxt_z, mxt_y, mxt_x = np.shape(mx_t)
     # Trimming overlap area
-    mx_c_overlap = mx_c[ReLU( dist_z) : mxc_z          - ReLU(mxc_z - mxt_z - dist_z),
-                        ReLU( dist_y) : mxc_y          - ReLU(mxc_y - mxt_y - dist_y),
-                        ReLU( dist_x) : mxc_x          - ReLU(mxc_x - mxt_x - dist_x)]
-    mx_t_overlap = mx_t[ReLU(-dist_z) : mxc_z - dist_z - ReLU(mxc_z - mxt_z - dist_z),
-                        ReLU(-dist_y) : mxc_y - dist_y - ReLU(mxc_y - mxt_y - dist_y),
-                        ReLU(-dist_x) : mxc_x - dist_x - ReLU(mxc_x - mxt_x - dist_x)]
+    c_z_from = ReLU( dist_z) - ReLU( dist_z - mxc_z)
+    c_y_from = ReLU( dist_y) - ReLU( dist_y - mxc_y)
+    c_x_from = ReLU( dist_x) - ReLU( dist_x - mxc_x)
+    t_z_from = ReLU(-dist_z) - ReLU(-dist_z - mxt_z)
+    t_y_from = ReLU(-dist_y) - ReLU(-dist_y - mxt_y)
+    t_x_from = ReLU(-dist_x) - ReLU(-dist_x - mxt_x)
+    c_z_to   = ReLU(mxc_z          - ReLU(mxc_z - mxt_z - dist_z))
+    c_y_to   = ReLU(mxc_y          - ReLU(mxc_y - mxt_y - dist_y))
+    c_x_to   = ReLU(mxc_x          - ReLU(mxc_x - mxt_x - dist_x))
+    t_z_to   = ReLU(mxc_z - dist_z - ReLU(mxc_z - mxt_z - dist_z))
+    t_y_to   = ReLU(mxc_y - dist_y - ReLU(mxc_y - mxt_y - dist_y))
+    t_x_to   = ReLU(mxc_x - dist_x - ReLU(mxc_x - mxt_x - dist_x))
+    mx_c_overlap = mx_c[c_z_from:c_z_to, c_y_from:c_y_to, c_x_from:c_x_to]
+    mx_t_overlap = mx_t[t_z_from:t_z_to, t_y_from:t_y_to, t_x_from:t_x_to]
     # Get matrix total item amount
     overlap_box_size = np.prod(np.shape(mx_c_overlap))
     mx_c_overlap_1d = np.reshape(mx_c_overlap, overlap_box_size)
