@@ -1,17 +1,21 @@
 ##### cpjohn expansion microscope
 
 ### Last Update
+# Ver. 1.2
+# Date: 2020/11/11
+# Content: Add filtering function to AutoPC function
+
+### Before
 # Ver. 1.1
 # Date: 2020/10/22
 # Content: resampleRGI3d: Modify layout, add dtype function.
 #          AutoPC: Modify layout, add c_z_from, t_x_to and other 10 variable,
 #                  Fix returning error problem
-
-### Before
 # Ver. 1.0
 # R. Date : 2020/10/09
 
 import numpy as np
+import datetime
 from scipy.interpolate import RegularGridInterpolator
 
 def tag_to_posi(tag):
@@ -27,18 +31,25 @@ def ReLU(x):
     if x > 0: y = x
     return y
 
-##### Generate Function (2.1) (present)
-
-def AutoPC(mx_c, mx_t, posi_c, posi_t):
+def AutoPC(mx_c, mx_t, posi_c, posi_t, threshold=False, th_value=0, th_type='below'):
     # Ref: 10 T-04 (1.0)
-    # Ver.: 2.1
-    # input: two 3D numpy array and their corresponding position
+    # Ver.: 2.2
+    # input: two 3D numpy array and their corresponding position, threshold info
     # inner func.: ReLU
     # Function ReLU
     def ReLU(x):
         y = 0
         if x > 0: y = x
         return y
+    # Function threshold filter
+    def mx_filter(mx, th, th_type):
+        if   th_type == 'below': mx[mx < th] = 0
+        elif th_type == 'above': mx[mx > th] = 0
+        return mx
+    # Filtering
+    if threshold == True:
+        mx_c = mx_filter(mx_c, th_value, th_type)
+        mx_t = mx_filter(mx_t, th_value, th_type)
     # diff_a : Distance from posi_c anchor to posi_t anchor
     diff_a = [t-c for t, c in zip(posi_t, posi_c)]
     # Get anchor distance along corresponding axis
@@ -86,3 +97,17 @@ def resampleRGI3d(input_mx, resize_to, dtype='float64'):
     RGI_mesh_mx = RGI((meshgrid_para[0], meshgrid_para[1], meshgrid_para[2]))
     RGI_mx = np.transpose(RGI_mesh_mx, axes=[1, 0, 2]).astype(dtype)
     return RGI_mx
+
+def time_tag(input_dt):
+    # R: 10 T-09
+    # Ver. 1.0
+    # input: datetime.datetime
+    # output: formed tag YYMMDD_hhmm
+    dt_now = input_dt
+    YY = str(dt_now.year)[-2:]
+    MM = str(dt_now.month).zfill(2)
+    DD = str(dt_now.day).zfill(2)
+    hh = str(dt_now.hour).zfill(2)
+    mm = str(dt_now.minute).zfill(2)
+    tag = YY + MM + DD + '_' + hh + mm
+    return tag
